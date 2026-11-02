@@ -57,13 +57,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           source ./versions.env
-          tag="v$PODMAN_VERSION-$REVISION"
+          tag="v$PODMAN_VERSION"
           if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release $tag exists. Increase REVISION in versions.env to publish a rebuild."
+            echo "Release $tag exists. Delete it first to publish a rebuild of the same version."
             exit 0
           fi
           cat dist/*.sha256 > dist/SHA256SUMS
           gh release create "$tag" dist/*.tar.gz dist/SHA256SUMS \
             --target "$GITHUB_SHA" \
-            --title "Podman $PODMAN_VERSION ($REVISION)" \
+            --title "Podman $PODMAN_VERSION" \
             --notes "Podman $PODMAN_VERSION built with systemd support, with the tools of podman-static $PODMAN_VERSION. See BUILD-INFO in each archive."

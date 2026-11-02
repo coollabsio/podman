@@ -68,7 +68,7 @@ CONF
 # fuse-overlayfs is for rootless containers. Rootful containers use the kernel overlay.
 rm -f "$work/$bundle/etc/containers/storage.conf.d/00-podman-static.conf"
 cat > "$work/$bundle/BUILD-INFO" <<INFO
-Podman $PODMAN_VERSION, revision $REVISION, $arch
+Podman $PODMAN_VERSION, $arch
 podman: built from https://github.com/containers/podman/tree/v$PODMAN_VERSION with Go $GO_VERSION and the systemd build tag
 other tools: https://github.com/mgoltzsche/podman-static/releases/tag/v$PODMAN_VERSION (sha256 $static_sha256)
 INFO

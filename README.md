@@ -37,11 +37,11 @@ sudo systemctl enable --now podman.socket
 
 1. Wait for the podman-static release of the new Podman version.
 2. Verify the GPG signatures of its two archives (see `versions.env`).
-3. In `versions.env`, set `PODMAN_VERSION`, the two `PODMAN_STATIC_SHA256_*` values, and `REVISION=1`. Set `GO_VERSION` if Podman needs a newer Go.
+3. In `versions.env`, set `PODMAN_VERSION` and the two `PODMAN_STATIC_SHA256_*` values. Set `GO_VERSION` if Podman needs a newer Go.
 4. Open a pull request. CI builds both architectures and runs `smoke-test.sh`.
-5. Merge it. CI publishes the release `v<PODMAN_VERSION>-<REVISION>`.
+5. Merge it. CI publishes the release `v<PODMAN_VERSION>`, with the same tag as the Podman release.
 
-To rebuild the same version, increase `REVISION`.
+A release is published once for each Podman version. To rebuild the same version, delete its release and tag, then run the workflow again. Coolify pins the SHA-256 of each archive, so also update the values in Coolify.
 
 Build locally:
 
