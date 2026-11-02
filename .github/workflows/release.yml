@@ -1,0 +1,68 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build
+        run: docker run --rm -v "$PWD:/work" -w /work ubuntu:22.04 bash build.sh
+
+      - name: Smoke test
+        run: |
+          # The runner image has the Ubuntu Podman. Its storage can have a database that this version cannot read.
+          sudo rm -rf /var/lib/containers/storage
+          sudo bash smoke-test.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: podman-linux-${{ matrix.arch }}
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source ./versions.env
+          tag="v$PODMAN_VERSION-$REVISION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag exists. Increase REVISION in versions.env to publish a rebuild."
+            exit 0
+          fi
+          cat dist/*.sha256 > dist/SHA256SUMS
+          gh release create "$tag" dist/*.tar.gz dist/SHA256SUMS \
+            --target "$GITHUB_SHA" \
+            --title "Podman $PODMAN_VERSION ($REVISION)" \
+            --notes "Podman $PODMAN_VERSION built with systemd support, with the tools of podman-static $PODMAN_VERSION. See BUILD-INFO in each archive."
