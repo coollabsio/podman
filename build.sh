@@ -34,7 +34,7 @@ make -C "$work/podman" bin/podman EXTRA_LDFLAGS='-s -w' \
     BUILDTAGS='grpcnotrace seccomp apparmor systemd containers_image_openpgp exclude_graphdriver_btrfs'
 "$work/podman/bin/podman" --version | grep -qxF "podman version $PODMAN_VERSION"
 # libsystemd is loaded at run time, so the binary works on any distribution with glibc 2.34 or later.
-needed="$(objdump -p "$work/podman/bin/podman" | awk '/NEEDED/ { print $2 }' | sort | tr '\n' ' ')"
+needed="$(objdump -p "$work/podman/bin/podman" | awk '/NEEDED/ && $2 !~ /^ld-linux/ { print $2 }' | sort | tr '\n' ' ')"
 if [ "$needed" != "libc.so.6 libseccomp.so.2 " ]; then
     echo "podman links unexpected libraries: $needed" >&2
     exit 1
