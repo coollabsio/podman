@@ -15,7 +15,8 @@ systemctl daemon-reload
 /usr/local/bin/podman --version | grep -qxF "podman version $PODMAN_VERSION"
 
 podman=/usr/local/bin/podman
-"$podman" info --format '{{.Host.LogDriver}} {{.Store.GraphDriverName}} {{.Host.DatabaseBackend}}' | grep -qx 'k8s-file overlay sqlite'
+"$podman" info --format '{{.Host.LogDriver}} {{.Store.GraphDriverName}} {{.Host.DatabaseBackend}} {{.Host.OCIRuntime.Path}} {{.Host.Conmon.Path}}' |
+    grep -qx 'k8s-file overlay sqlite /usr/local/bin/crun /usr/local/lib/podman/conmon'
 "$podman" run -d --name smoke-test --health-cmd 'test -f /tmp/healthy' --health-interval 2s --health-retries 1 \
     docker.io/library/alpine:3 sh -c 'touch /tmp/healthy; sleep 300' >/dev/null
 trap '"$podman" rm -f -t 0 smoke-test >/dev/null 2>&1 || true' EXIT

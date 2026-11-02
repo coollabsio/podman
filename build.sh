@@ -47,8 +47,24 @@ echo "$static_sha256  $work/static.tar.gz" | sha256sum -c -
 tar -xzf "$work/static.tar.gz" -C "$work"
 install -m 0755 "$work/podman/bin/podman" "$work/$bundle/usr/local/bin/podman"
 
-# The static conmon cannot write to journald, which is the default log driver of a systemd build.
-printf '\n[containers]\nlog_driver = "k8s-file"\n' >> "$work/$bundle/etc/containers/containers.conf"
+# Use only the tools of this archive. Podman looks in /usr/bin and /usr/libexec first, where an
+# older crun or conmon of the distribution can be. The static conmon cannot write to journald,
+# which is the default log driver of a systemd build.
+mkdir -p "$work/$bundle/etc/containers/containers.conf.d"
+cat > "$work/$bundle/etc/containers/containers.conf.d/10-coolify-podman.conf" <<'CONF'
+[containers]
+log_driver = "k8s-file"
+init_path = "/usr/local/lib/podman/catatonit"
+
+[engine]
+conmon_path = ["/usr/local/lib/podman/conmon"]
+helper_binaries_dir = ["/usr/local/libexec/podman", "/usr/local/lib/podman"]
+runtime = "crun"
+
+[engine.runtimes]
+crun = ["/usr/local/bin/crun"]
+runc = ["/usr/local/bin/runc"]
+CONF
 # fuse-overlayfs is for rootless containers. Rootful containers use the kernel overlay.
 rm -f "$work/$bundle/etc/containers/storage.conf.d/00-podman-static.conf"
 cat > "$work/$bundle/BUILD-INFO" <<INFO

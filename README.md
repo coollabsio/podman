@@ -15,7 +15,7 @@ Each release has one archive for each architecture:
 
 Two settings differ from podman-static:
 
-- `log_driver = "k8s-file"`, because the static `conmon` cannot write to journald.
+- `containers.conf.d/10-coolify-podman.conf` sets the paths of `crun`, `runc`, `conmon`, and the helper tools of the archive, so an older version from the distribution is not used. It also sets `log_driver = "k8s-file"`, because the static `conmon` cannot write to journald.
 - The `fuse-overlayfs` storage setting is removed, so rootful containers use the kernel overlay.
 
 `podman` needs glibc 2.34 or later and `libseccomp.so.2`. It loads libsystemd at run time. It works on Ubuntu 22.04 and later, Debian 12 and later, and RHEL 9 and later. It does not work on RHEL 8 or Alpine.
