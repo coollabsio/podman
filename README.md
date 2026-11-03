@@ -51,6 +51,22 @@ echo 'L+ /run/docker.sock - - - - /run/podman/podman.sock' | sudo tee /etc/tmpfi
 sudo systemd-tmpfiles --create /etc/tmpfiles.d/docker-socket.conf
 ```
 
+### Optional: rootless containers
+
+The install is for rootful containers. To let a user run rootless containers, run the setup script of the archive once for each user:
+
+```sh
+sudo "podman-linux-$arch/setup-rootless.sh" <user>
+```
+
+The script:
+
+- Installs `newuidmap` and `newgidmap` from the distribution (`uidmap` on Debian and Ubuntu, `shadow-utils` on RHEL). They must be setuid root, so the archive does not contain them.
+- Adds 65536 subordinate IDs for the user to `/etc/subuid` and `/etc/subgid`, if the user has none.
+- On Ubuntu, changes the AppArmor profile `/etc/apparmor.d/podman` so that it also applies to `/usr/local/bin/podman`. Without this change, rootless Podman fails with `reexec: Permission denied`.
+
+You can run the script again. It changes only what is missing. After it, log in again as the user (a new login session, not `sudo -u`), then run `podman run --rm docker.io/library/alpine:3 id`.
+
 ### Update
 
 Stop all containers, then do the install steps again with the new version.
@@ -63,6 +79,7 @@ Podman 5 and later cannot read the BoltDB database of Podman 4 (`/var/lib/contai
 - `conmon`, built with journald support, and `crun`, built with systemd support. They have the same versions as in podman-static.
 - `runc`, `netavark`, `aardvark-dns`, `pasta`, `catatonit`, `fuse-overlayfs`, the systemd units, and the configuration files from podman-static with the same version.
 - The Podman man pages.
+- `setup-rootless.sh`, an optional setup for rootless containers. The install steps do not copy it.
 
 The binaries link only glibc, `libseccomp.so.2`, and `libsystemd.so.0`. `podman` loads libsystemd at run time.
 
@@ -76,7 +93,6 @@ The `fuse-overlayfs` storage setting of podman-static is removed, so rootful con
 
 ## Known limits
 
-- Rootless containers need `newuidmap` and `newgidmap` (package `uidmap` on Debian and Ubuntu) and a range in `/etc/subuid` and `/etc/subgid`. See the [podman-static README](https://github.com/mgoltzsche/podman-static#host-configuration), which also explains an AppArmor fix for rootless Podman on Ubuntu.
 - Containers that were created with the `cgroupfs` cgroup manager of an older install keep it. Create them again to use the systemd cgroup manager.
 
 ## License

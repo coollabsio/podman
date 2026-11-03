@@ -72,6 +72,8 @@ install -m 0755 "$work/podman/bin/podman" "$work/$bundle/usr/local/bin/podman"
 install -m 0755 "$work/conmon/bin/conmon" "$work/$bundle/usr/local/lib/podman/conmon"
 install -m 0755 "$work/crun/crun" "$work/$bundle/usr/local/bin/crun"
 make -C "$work/podman" install.man DESTDIR="$work/$bundle" PREFIX=/usr/local
+# Optional rootless setup. It stays next to usr/ and etc/, so the install does not copy it.
+install -m 0755 setup-rootless.sh "$work/$bundle/setup-rootless.sh"
 
 # podman-static sets cgroupfs and file events, because its tools have no systemd support. Use the
 # defaults of a systemd build instead: journald logs and events, and the systemd cgroup manager.
