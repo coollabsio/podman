@@ -29,6 +29,8 @@ sudo systemctl stop podman.socket podman.service 2>/dev/null || true
 sudo cp -r "podman-linux-$arch/usr" "podman-linux-$arch/etc" /
 sudo systemctl daemon-reload
 sudo systemctl enable --now podman.socket
+# Start containers with --restart always after a boot.
+sudo systemctl enable podman-restart.service
 ```
 
 Check the install:
