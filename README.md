@@ -4,7 +4,7 @@ Up-to-date Podman for Linux distributions that ship an old Podman, such as Ubunt
 
 Each release has the same version as the [Podman release](https://github.com/containers/podman/releases) that it is built from. One archive works on all supported distributions, so every host runs the same Podman version.
 
-Why not [podman-static](https://github.com/mgoltzsche/podman-static)? Its `podman` is built without systemd support, so health checks never run on a timer. This build adds systemd support and keeps the other tools of podman-static.
+Why not [podman-static](https://github.com/mgoltzsche/podman-static)? Its tools are built without systemd support: health checks never run on a timer, logs cannot go to journald, and containers cannot use the systemd cgroup manager. This build adds systemd support to `podman`, `conmon`, and `crun`, and keeps the other tools of podman-static.
 
 ## Supported systems
 
@@ -48,25 +48,24 @@ Podman 5 and later cannot read the BoltDB database of Podman 4 (`/var/lib/contai
 ## What the archive contains
 
 - `podman`, built from the Podman release with the `systemd` build tag. Health check timers and `sd_notify` need it.
-- `crun`, `runc`, `conmon`, `netavark`, `aardvark-dns`, `pasta`, `catatonit`, `fuse-overlayfs`, the systemd units, and the configuration files from podman-static with the same version.
+- `conmon`, built with journald support, and `crun`, built with systemd support. They have the same versions as in podman-static.
+- `runc`, `netavark`, `aardvark-dns`, `pasta`, `catatonit`, `fuse-overlayfs`, the systemd units, and the configuration files from podman-static with the same version.
+- The Podman man pages.
 
-These settings differ from podman-static:
+The binaries link only glibc, `libseccomp.so.2`, and `libsystemd.so.0`.
 
-- `etc/containers/containers.conf.d/10-podman.conf` sets the paths of `crun`, `runc`, `conmon`, and the helper tools of the archive, so an older version from the distribution is not used. It also sets `log_driver = "k8s-file"`, because the static `conmon` cannot write to journald.
-- The `fuse-overlayfs` storage setting is removed, so rootful containers use the kernel overlay.
+The configuration is in `etc/containers/containers.conf.d/10-podman.conf`:
+
+- journald for container logs and events, and the systemd cgroup manager, as in a distribution package.
+- The paths of `crun`, `runc`, `conmon`, and the helper tools of the archive, so an older version from the distribution is not used.
+- `log_size_max = 52428800` (50 MiB) for containers that use the `k8s-file` log driver.
+
+The `fuse-overlayfs` storage setting of podman-static is removed, so rootful containers use the kernel overlay.
 
 ## Known limits
 
-- Container logs use `k8s-file`, not journald. The log files have no size limit by default. To set one, add a file in `/etc/containers/containers.conf.d/`:
-
-  ```toml
-  [containers]
-  log_size_max = 52428800
-  ```
-
-- Containers use the `cgroupfs` cgroup manager, because the static `crun` has no systemd support.
 - Rootless containers need `newuidmap` and `newgidmap` (package `uidmap` on Debian and Ubuntu) and a range in `/etc/subuid` and `/etc/subgid`. See the [podman-static README](https://github.com/mgoltzsche/podman-static#host-configuration), which also explains an AppArmor fix for rootless Podman on Ubuntu.
-- The archive has no man pages.
+- Containers that were created with the `cgroupfs` cgroup manager of an older install keep it. Create them again to use the systemd cgroup manager.
 
 ## License
 
