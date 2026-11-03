@@ -51,7 +51,7 @@ install -m 0755 "$work/podman/bin/podman" "$work/$bundle/usr/local/bin/podman"
 # older crun or conmon of the distribution can be. The static conmon cannot write to journald,
 # which is the default log driver of a systemd build.
 mkdir -p "$work/$bundle/etc/containers/containers.conf.d"
-cat > "$work/$bundle/etc/containers/containers.conf.d/10-coolify-podman.conf" <<'CONF'
+cat > "$work/$bundle/etc/containers/containers.conf.d/10-podman.conf" <<'CONF'
 [containers]
 log_driver = "k8s-file"
 init_path = "/usr/local/lib/podman/catatonit"

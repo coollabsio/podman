@@ -52,7 +52,7 @@ Podman 5 and later cannot read the BoltDB database of Podman 4 (`/var/lib/contai
 
 These settings differ from podman-static:
 
-- `etc/containers/containers.conf.d/10-coolify-podman.conf` sets the paths of `crun`, `runc`, `conmon`, and the helper tools of the archive, so an older version from the distribution is not used. It also sets `log_driver = "k8s-file"`, because the static `conmon` cannot write to journald.
+- `etc/containers/containers.conf.d/10-podman.conf` sets the paths of `crun`, `runc`, `conmon`, and the helper tools of the archive, so an older version from the distribution is not used. It also sets `log_driver = "k8s-file"`, because the static `conmon` cannot write to journald.
 - The `fuse-overlayfs` storage setting is removed, so rootful containers use the kernel overlay.
 
 ## Known limits
