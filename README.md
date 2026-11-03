@@ -68,24 +68,6 @@ These settings differ from podman-static:
 - Rootless containers need `newuidmap` and `newgidmap` (package `uidmap` on Debian and Ubuntu) and a range in `/etc/subuid` and `/etc/subgid`. See the [podman-static README](https://github.com/mgoltzsche/podman-static#host-configuration), which also explains an AppArmor fix for rootless Podman on Ubuntu.
 - The archive has no man pages.
 
-## Build a new version
-
-1. Wait for the podman-static release of the new Podman version.
-2. Verify the GPG signatures of its two archives (see `versions.env`).
-3. In `versions.env`, set `PODMAN_VERSION` and the two `PODMAN_STATIC_SHA256_*` values. Set `GO_VERSION` if Podman needs a newer Go.
-4. Open a pull request. CI builds both architectures on native runners and runs `smoke-test.sh`.
-5. Merge it. CI publishes the release `v<PODMAN_VERSION>`.
-
-A release is published once for each Podman version. To rebuild the same version, delete its release and tag, then run the workflow again. The checksums change, so tell users that pin them.
-
-Build locally:
-
-```sh
-docker run --rm -v "$PWD:/work" -w /work ubuntu:22.04 bash build.sh
-```
-
-`smoke-test.sh` installs the archive on the host it runs on. Run it only on a disposable host or VM.
-
 ## License
 
 Podman and the tools in the archive have their own licenses. See the [Podman](https://github.com/containers/podman) and [podman-static](https://github.com/mgoltzsche/podman-static) repositories.
