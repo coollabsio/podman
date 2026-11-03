@@ -53,19 +53,26 @@ sudo systemd-tmpfiles --create /etc/tmpfiles.d/docker-socket.conf
 
 ### Optional: rootless containers
 
-The install is for rootful containers. To let a user run rootless containers, run the setup script of the archive once for each user:
+The install is for rootful containers. To also allow rootless containers, run the setup script of the archive once on the host:
 
 ```sh
-sudo "podman-linux-$arch/setup-rootless.sh" <user>
+sudo "podman-linux-$arch/setup-rootless.sh"
 ```
 
-The script:
+The script does the steps that a distribution package of Podman does:
 
 - Installs `newuidmap` and `newgidmap` from the distribution (`uidmap` on Debian and Ubuntu, `shadow-utils` on RHEL). They must be setuid root, so the archive does not contain them.
-- Adds 65536 subordinate IDs for the user to `/etc/subuid` and `/etc/subgid`, if the user has none.
 - On Ubuntu, changes the AppArmor profile `/etc/apparmor.d/podman` so that it also applies to `/usr/local/bin/podman`. Without this change, rootless Podman fails with `reexec: Permission denied`.
 
-You can run the script again. It changes only what is missing. After it, log in again as the user (a new login session, not `sudo -u`), then run `podman run --rm docker.io/library/alpine:3 id`.
+You can run the script again. It changes only what is missing.
+
+Each user also needs a range of subordinate IDs in `/etc/subuid` and `/etc/subgid`. `useradd` adds one when it creates a user, so usually there is nothing to do. The script lists users that have no range. Add one for such a user, for example:
+
+```sh
+sudo usermod --add-subuids 300000-365535 --add-subgids 300000-365535 <user>
+```
+
+Use a range that no other user has. Then log in again as the user (a new login session, not `sudo -u`), and run `podman run --rm docker.io/library/alpine:3 id`.
 
 ### Update
 
@@ -79,7 +86,7 @@ Podman 5 and later cannot read the BoltDB database of Podman 4 (`/var/lib/contai
 - `conmon`, built with journald support, and `crun`, built with systemd support. They have the same versions as in podman-static.
 - `runc`, `netavark`, `aardvark-dns`, `pasta`, `catatonit`, `fuse-overlayfs`, the systemd units, and the configuration files from podman-static with the same version.
 - The Podman man pages.
-- `setup-rootless.sh`, an optional setup for rootless containers. The install steps do not copy it.
+- `setup-rootless.sh`, an optional host setup for rootless containers. The install steps do not copy it.
 
 The binaries link only glibc, `libseccomp.so.2`, and `libsystemd.so.0`. `podman` loads libsystemd at run time.
 
