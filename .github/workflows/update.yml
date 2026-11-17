@@ -1,0 +1,40 @@
+name: Update versions
+
+# Each day, set versions.env to the latest podman-static release and start a build and release.
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: update
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Update versions.env
+        id: update
+        run: |
+          version="$(bash update-versions.sh)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # A push with GITHUB_TOKEN does not start other workflows, so start the release workflow here.
+      - name: Commit and start the release
+        if: steps.update.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -am "feat: update to Podman $VERSION"
+          git push origin HEAD:main
+          gh workflow run release.yml --ref main

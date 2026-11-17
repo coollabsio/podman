@@ -98,6 +98,12 @@ The configuration is in `etc/containers/containers.conf.d/10-podman.conf`:
 
 The `fuse-overlayfs` storage setting of podman-static is removed, so rootful containers use the kernel overlay.
 
+## New releases
+
+Each day, the `Update versions` workflow looks for a new [podman-static release](https://github.com/mgoltzsche/podman-static/releases). podman-static usually releases some days after Podman. When there is a newer release, the workflow runs `update-versions.sh`, commits the new `versions.env` to `main`, and starts the `Build and release` workflow. The script checks the GPG signature of each podman-static archive before it records its SHA-256. It takes the conmon and crun versions from the podman-static `Dockerfile`, and the latest Go patch release of the Go version in Podman's `go.mod`.
+
+To check for a new release now, run the `Update versions` workflow by hand.
+
 ## Known limits
 
 - Containers that were created with the `cgroupfs` cgroup manager of an older install keep it. Create them again to use the systemd cgroup manager.
